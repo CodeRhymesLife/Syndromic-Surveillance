@@ -1,0 +1,4 @@
+CountryName,EpidemicNameDate,CountryColor,EpidemicLatitude,EpidemicLongitude,CountryCode,ContinentName,
+Haiti,Cholera (2010),#990000,19.0,72.25,HT,North America
+Liberia,Ebola (2014),#dd0000,6.3167,10.8,LR,Africa
+Sierra Leone,Ebola(2014),#dd0000,8.4844,13.2344,SL,Africa
