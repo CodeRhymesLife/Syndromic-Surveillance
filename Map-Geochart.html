@@ -31,18 +31,6 @@
 		}
 	</style>
     <script type="text/javascript">
-		// A set of colors we can use in our chart
-		var colors = [ "red", "green", "blue", "yellow", "purple", "orange" ];
-		
-		// We need to associate an id with each color to give to the
-		// chart so it knows which values to associate with what colors.
-		// We also use this to build our legend
-		var colorCounter = 0;
-		var colorIndexes = [];
-		colors.forEach(function (c) {
-			colorIndexes.push(colorCounter++);
-		});
-	
 		// Contains all country data
 		// Eventually, within each country we can contain city data as well.
 		// So when we zoom in we can display markers for each city
@@ -57,7 +45,6 @@
 			"Madagascar": {
 				diseases: {
 					"Bubonic Plague": 100,
-					"Second": 100,
 				},
 				population: null,
 				cities: null,
@@ -113,8 +100,137 @@
 				population: null,
 			},
 		};
+
+		function DiseaseGeochart() {
+			// A set of colors we can use in our chart
+			this.colors = [ "red", "green", "blue", "yellow", "purple", "orange" ];
+
+			// The geo chart
+			this.chart = null;
+			
+			// We need to associate an id with each color to give to the
+			// chart so it knows which values to associate with what colors.
+			// We also use this to build our legend
+			var colorCounter = 0;
+			var colorIndexes = [];
+			this.colors.forEach(function (c) {
+				colorIndexes.push(colorCounter++);
+			});
+			this.colorIndexes = colorIndexes;
+			
+			this.draw = function() {
+				chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+
+				chart.draw(this.getData(), this.getOptions());
+			
+				// Hook up events
+				google.visualization.events.addListener(chart, 'select', onSelect);
+				google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
+			}
+			
+			// Selection event handler
+			var onSelect = function(e) {
+				var selection = this.chart.getSelection()[0];
+			};
+			
+			// Region click event handler
+			var onRegionClick = function(e) {
+				var region = e.region;
+			}
+		}
 		
-		var chart = null;
+		DiseaseGeochart.prototype.getData = function() {
+			throw "Not Implemented"; 
+		};
+		
+		DiseaseGeochart.prototype.getOptions = function() {
+			return {
+				colorAxis: {
+					colors: this.colors,
+					values: this.colorIndexes
+				}
+			};
+		};
+		
+		RegionGeochart.prototype = new DiseaseGeochart();
+		RegionGeochart.prototype.constructor = RegionGeochart;
+		function RegionGeochart() {
+		}
+		
+		RegionGeochart.prototype.getData = function() {
+			// Clear the legend
+			legend.innerHTML = "";
+		
+			// Create the data object and add columns.
+			// We don't want to display the disease column that's used for coloring,
+			// so instead we add a tooltip column
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'Country');
+			data.addColumn("number", "DiseaseColor");
+			data.addColumn({type:'string', role:'tooltip'});
+			
+			// Add each country to the dataset and
+			// use a different color for each disease
+			var colorCounter = 0;
+			var diseaseColorMap = {};
+			for(var countryName in countryData)
+			{
+				var country = countryData[countryName];
+				
+				// Loop through each countries diseases and add an entry for them
+				//
+				// NOTE: Currently the last entry winds. We need to color code (or identify in some way)
+				// countries that have multiple diseases.
+				for(var diseaseName in country.diseases)
+				{
+					var disease = country.diseases[diseaseName];
+				
+					// If we haven't seen this disease save it's color
+					// and increment our counter
+					if(!diseaseColorMap[diseaseName])
+					{
+						// If we've used up all of our colors
+						// throw an exception.
+						if(colorCounter >= this.colorIndexes.length)
+							throw "We need more colors!"
+					
+						var diseaseColorIndex = this.colorIndexes[colorCounter++];
+						diseaseColorMap[diseaseName] = diseaseColorIndex;
+						
+						// Update our legend with the new color
+						var diseaseLegendEntry = document.createElement("li");
+						diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + this.colors[diseaseColorIndex] + "'></div>" +
+							"<label>" + diseaseName + "</label>" +
+							"<div style='clear: both;'></div>";
+						
+						legend.appendChild(diseaseLegendEntry);
+					}
+					
+					// Add a row for the country
+					data.addRow([
+						countryName,					// Country
+						diseaseColorIndex,				// Disease color
+						"Disease: " + diseaseName		// Hover tooltip
+					]);
+				}
+				
+			}
+			
+			return data; 
+		};
+		
+		RegionGeochart.prototype.getOptions = function() {
+			var options = DiseaseGeochart.prototype.getOptions.call(this);
+			
+			// If region was not specified default to the world view
+			if(typeof this.region != 'string')
+				this.region = 'world';
+			
+			options.region = this.region;
+			options.legend = 'none';
+			return options;
+		};
+		
 		google.load("visualization", "1", {packages:["geochart"]});
 		google.setOnLoadCallback(drawRegionsMap);
 		
@@ -155,95 +271,11 @@
 		}
 		
 		/*
-			Builds a data table of country data for the Geochart.
-			Building the data dynamically allows us to filter the data.
-			For example, we can filter based on disease or country
-		*/
-		function buildCountryDataTable() {
-			// Clear the legend
-			legend.innerHTML = "";
-		
-			// Create the data object and add columns.
-			// We don't want to display the disease column that's used for coloring,
-			// so instead we add a tooltip column
-			var data = new google.visualization.DataTable();
-			data.addColumn('string', 'Country');
-			data.addColumn("number", "DiseaseColor");
-			data.addColumn({type:'string', role:'tooltip'});
-			
-			// Add each country to the dataset and
-			// use a different color for each disease
-			var colorCounter = 0;
-			var diseaseColorMap = {};
-			for(var countryName in countryData)
-			{
-				var country = countryData[countryName];
-				
-				// Loop through each countries diseases and add an entry for them
-				//
-				// NOTE: Currently the last entry winds. We need to color code (or identify in some way)
-				// countries that have multiple diseases.
-				for(var diseaseName in country.diseases)
-				{
-					var disease = country.diseases[diseaseName];
-				
-					// If we haven't seen this disease save it's color
-					// and increment our counter
-					if(!diseaseColorMap[diseaseName])
-					{
-						// If we've used up all of our colors
-						// throw an exception.
-						if(colorCounter >= colorIndexes.length)
-							throw "We need more colors!"
-					
-						var diseaseColorIndex = colorIndexes[colorCounter++];
-						diseaseColorMap[diseaseName] = diseaseColorIndex;
-						
-						// Update our legend with the new color
-						var diseaseLegendEntry = document.createElement("li");
-						diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + colors[diseaseColorIndex] + "'></div>" +
-							"<label>" + diseaseName + "</label>" +
-							"<div style='clear: both;'></div>";
-						
-						legend.appendChild(diseaseLegendEntry);
-					}
-					
-					// Add a row for the country
-					data.addRow([
-						countryName,					// Country
-						diseaseColorIndex,				// Disease color
-						"Disease: " + diseaseName		// Hover tooltip
-					]);
-				}
-				
-			}
-			
-			return data;
-		}
-		
-		/*
 			Draw the chart
 		*/
 		function drawRegionsMap(region) {
-			// If region was not specified default to the world view
-			if(typeof region != 'string')
-				region = 'world';
-		
-			var data = buildCountryDataTable();
-			
-			var options = {
-				region: region,
-				legend: 'none',
-				colorAxis: { colors: colors, values: colorIndexes }
-			};
-
-			chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
-
-			chart.draw(data, options);
-
-			// Hook up events
-			google.visualization.events.addListener(chart, 'select', onSelect);
-			google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
+			var regionChart = new RegionGeochart();
+			regionChart.draw();
       }
     </script>
   </head>
