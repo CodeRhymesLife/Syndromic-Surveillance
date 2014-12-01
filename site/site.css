@@ -1,0 +1,27 @@
+.zoom {
+	list-style: none;
+}
+
+.zoom li {
+	display: inline;
+	border: 1px solid black;
+	padding: 3px;
+	font-size: 14px;
+}
+
+.zoom li:hover {
+	cursor: pointer;
+}
+
+#legend {
+	list-style: none;
+}
+
+#legend li label, #legend li .diseaseColor {
+	float: left;
+}
+
+#legend .diseaseColor{
+	width: 10px;
+	height: 10px;
+}
