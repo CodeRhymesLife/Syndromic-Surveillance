@@ -2,25 +2,102 @@
   <head>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
+		// Contains all country data
+		// Eventually, within each country we can contain city data as well.
+		// So when we zoom in we can display markers for each city
+		var countryData = [
+			{
+				name: "Haiti",
+				disease: "Cholera"
+			},
+			{
+				name: "Madagascar",
+				disease: "Bubonic Plague"
+			},
+			{
+				name: "Sierra Lione",
+				disease: "Ebola"
+			},
+			{
+				name: "Guinea",
+				disease: "Ebola"
+			},
+			{
+				name: "Liberia",
+				disease: "Ebola"
+			},
+		];
+		
+		var chart = null;
 		google.load("visualization", "1", {packages:["geochart"]});
 		google.setOnLoadCallback(drawRegionsMap);
 
+		/*
+			Fired when a highlighted visualization (e.g. country) is selected
+		*/
+		function onSelect(e) {
+			var selection = chart.getSelection()[0];
+		}
+		
+		/*
+			Fired when a region is selected
+		*/
+		function onRegionClick(e) {
+			var region = e.region;
+		}
+		
+		/*
+			Builds a data table of country data for the Geochart.
+			Building the data dynamically allows us to filter the data.
+			For example, we can filter based on disease or country
+		*/
+		function buildCountryDataTable() {
+			// Create the data object and add columns.
+			// We don't want to display the disease column that's used for coloring,
+			// so instead we add a tooltip column
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'Country');
+			data.addColumn('number', 'Disease');
+			data.addColumn({type:'string', role:'tooltip'});
+			
+			// Add each country to the dataset and
+			// create a disease code for each disease
+			var diseaseCodeCounter = 0;
+			var diseaseCodeMap = {};
+			countryData.forEach(function (country) {
+				// If we haven't seen this disease save it's color
+				// amd increment our counter
+				if(!diseaseCodeMap[country.disease])
+					diseaseCodeMap[country.disease] = diseaseCodeCounter++
+				
+				// Add a row for the country
+				data.addRow([
+					country.name,						// Country
+					diseaseCodeMap[country.disease],	// Disease code
+					"Disease " + country.disease		// Hover tooltip
+				]);
+			});
+			
+			return data;
+		}
+		
+		/*
+			Draw the chart
+		*/
 		function drawRegionsMap() {
+			var data = buildCountryDataTable();
 
-			var data = google.visualization.arrayToDataTable([
-				['Country', 'Disease'],
-				['Haiti', 'Cholera'],
-				['Madagascar', 'Bubonic Plague'],
-				['Sierra Lione', 'Ebola'],
-				['Guinea', 'Ebola'],
-				['Liberia', 'Ebola'],
-			]);
+			var options = {
+				colorAxis: {colors: ['#e7711c', '#4374e0']}
+			};
 
-		var options = {};
+			chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
 
-		var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+			chart.draw(data, options);
 
-		chart.draw(data, options);
+			// Hook up events
+			google.visualization.events.addListener(chart, 'select', onSelect);
+			google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
       }
     </script>
   </head>
