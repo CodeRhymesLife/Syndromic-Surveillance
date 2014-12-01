@@ -104,9 +104,6 @@
 		function DiseaseGeochart() {
 			// A set of colors we can use in our chart
 			this.colors = [ "red", "green", "blue", "yellow", "purple", "orange" ];
-
-			// The geo chart
-			this.chart = null;
 			
 			// We need to associate an id with each color to give to the
 			// chart so it knows which values to associate with what colors.
@@ -117,25 +114,21 @@
 				colorIndexes.push(colorCounter++);
 			});
 			this.colorIndexes = colorIndexes;
+		}
+		
+		DiseaseGeochart.prototype.draw = function(itemSelected, regionClicked) {
+			chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
 			
-			// Selection event handler
-			var onSelect = function(e) {
-				var selection = this.chart.getSelection()[0];
-			};
+			data = this.getData();
+			chart.draw(data, this.getOptions());
 			
 			// Region click event handler
 			var onRegionClick = function(e) {
-				var region = e.region;
+				regionClicked(e.region);
 			}
-		}
-		
-		DiseaseGeochart.prototype.draw = function() {
-			chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
-			
-			chart.draw(this.getData(), this.getOptions());
 		
 			// Hook up events
-			google.visualization.events.addListener(chart, 'select', onSelect);
+			google.visualization.events.addListener(chart, 'select', itemSelected);
 			google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
 		};
 		
@@ -149,7 +142,8 @@
 		}
 		
 		RegionGeochart.prototype.getData = function() {
-			// Clear the legend
+			// Initialize the legend
+			legend.style.display = "block";
 			legend.innerHTML = "";
 		
 			// Create the data object and add columns.
@@ -282,6 +276,9 @@
 			};
 		};
 		
+		var regionChart = new RegionGeochart();
+		var cityChart = new CityGeochart();
+		
 		google.load("visualization", "1", {packages:["geochart"]});
 		google.setOnLoadCallback(drawRegionsMap);
 		
@@ -290,28 +287,20 @@
 			zoomIn.addEventListener("click", zoomInToLastSelectedRegion);
 			zoomOut.addEventListener("click", zoomOutToWorld);
 		});
-
-		/*
-			Fired when a highlighted visualization (e.g. country) is selected
-		*/
-		function onSelect(e) {
-			var selection = chart.getSelection()[0];
-			zoomInToLastSelectedRegion();
-		}
 		
 		/*
 			Fired when a region is selected
 		*/
-		var lastSelectedRegion = null;
-		function onRegionClick(e) {
-			lastSelectedRegion = e.region;
+		function onRegionClick(region) {
+			cityChart.region = region
 		}
 		
 		/*
 			Zoom in to the last selected region
 		*/
 		function zoomInToLastSelectedRegion() {
-			drawRegionsMap(lastSelectedRegion);
+			cityChart.draw();
+			legend.style.display = "none";
 		}
 		
 		/*
@@ -325,16 +314,12 @@
 			Draw the chart
 		*/
 		function drawRegionsMap(region) {
-			var regionChart = new RegionGeochart();
-			regionChart.draw();
-			
-			var cityChart = new CityGeochart();
-			//cityChart.draw();
-      }
+			regionChart.draw(zoomInToLastSelectedRegion, onRegionClick);
+		}
     </script>
   </head>
   <body>
-    <div id="regions_div" style="width: 900px; height: 500px;"></div>
+    <div id="chart_div"></div>
 	<ul class="zoom">
 		<li id="zoomIn">+</li>
 		<li id="zoomOut">-</li>
