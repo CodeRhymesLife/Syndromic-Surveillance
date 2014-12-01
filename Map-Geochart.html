@@ -54,38 +54,38 @@
 					"Ebola": 100,
 				},
 				population: null,
-				cities: [
-					{
-						name: "Freetown",
-						disease: "Ebola",
+				cities: {
+					"Freetown": {
+						diseases: {
+							"Ebola": 300,
+						},
 						population: 1170200,
-						dead: 300,
 					},
-					{
-						name: "Bo",
-						disease: "Ebola",
+					"Bo": {
+						diseases: {
+							"Ebola": 10,
+						},
 						population: 243266,
-						dead: 10,
 					},
-					{
-						name: "Kenema",
-						disease: "Ebola",
+					"Kenema": {
+						diseases: {
+							"Ebola": 33,
+						},
 						population: 188463,
-						dead: 33,
 					},
-					{
-						name: "Makeni",
-						disease: "Ebola",
+					"Makeni": {
+						diseases: {
+							"Ebola": 50,
+						},
 						population: 112489,
-						dead: 50,
 					},
-					{
-						name: "Koidu Town",
-						disease: "Ebola",
+					"Koidu Town": {
+						diseases: {
+							"Ebola": 3,
+						},
 						population: 111800,
-						dead: 3,
 					},
-				]
+				}
 			},
 			"Guinea": {
 				diseases: {
@@ -118,16 +118,6 @@
 			});
 			this.colorIndexes = colorIndexes;
 			
-			this.draw = function() {
-				chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
-
-				chart.draw(this.getData(), this.getOptions());
-			
-				// Hook up events
-				google.visualization.events.addListener(chart, 'select', onSelect);
-				google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
-			}
-			
 			// Selection event handler
 			var onSelect = function(e) {
 				var selection = this.chart.getSelection()[0];
@@ -139,17 +129,18 @@
 			}
 		}
 		
-		DiseaseGeochart.prototype.getData = function() {
-			throw "Not Implemented"; 
+		DiseaseGeochart.prototype.draw = function() {
+			chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+			
+			chart.draw(this.getData(), this.getOptions());
+		
+			// Hook up events
+			google.visualization.events.addListener(chart, 'select', onSelect);
+			google.visualization.events.addListener(chart, 'regionClick', onRegionClick);
 		};
 		
-		DiseaseGeochart.prototype.getOptions = function() {
-			return {
-				colorAxis: {
-					colors: this.colors,
-					values: this.colorIndexes
-				}
-			};
+		DiseaseGeochart.prototype.getData = function() {
+			throw "Not Implemented"; 
 		};
 		
 		RegionGeochart.prototype = new DiseaseGeochart();
@@ -177,14 +168,12 @@
 			{
 				var country = countryData[countryName];
 				
-				// Loop through each countries diseases and add an entry for them
+				// Loop through each country's diseases and add an entry for them
 				//
 				// NOTE: Currently the last entry winds. We need to color code (or identify in some way)
 				// countries that have multiple diseases.
 				for(var diseaseName in country.diseases)
 				{
-					var disease = country.diseases[diseaseName];
-				
 					// If we haven't seen this disease save it's color
 					// and increment our counter
 					if(!diseaseColorMap[diseaseName])
@@ -220,15 +209,77 @@
 		};
 		
 		RegionGeochart.prototype.getOptions = function() {
-			var options = DiseaseGeochart.prototype.getOptions.call(this);
+			return {
+				legend: 'none',
+				colorAxis: {
+					colors: this.colors,
+					values: this.colorIndexes
+				}
+			};
+		};
+		
+		CityGeochart.prototype = new DiseaseGeochart();
+		CityGeochart.prototype.constructor = CityGeochart;
+		function CityGeochart() {
+			this.region = "GN";
+		}
+		
+		CityGeochart.prototype.getData = function() {
+			// Create the data object and add columns.
+			// We don't want to display the disease column that's used for coloring,
+			// so instead we add a tooltip column
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'City');
+			data.addColumn("number", "Population");
+			data.addColumn("number", "Area");
+			data.addColumn({type:'string', role:'tooltip'});
 			
+			// Loop over each country and add it's cities' disease counts
+			var colorCounter = 0;
+			var diseaseColorMap = {};
+			for(var countryName in countryData)
+			{
+				var country = countryData[countryName];
+				
+				// If we don't have any cities go to the next country
+				if(!country.cities)
+					continue;
+				
+				// Loop through each country's cities and add an entry for them
+				for(var cityName in country.cities)
+				{
+					var city = country.cities[cityName];
+					
+					// Loop over each disease in this city and add an entry for each count
+					for(var diseaseName in city.diseases)
+					{
+						var diseaseToll = country.diseases[diseaseName];
+						
+						// Add a row for the country
+						data.addRow([
+							cityName,						// Country
+							city.population,				// Population
+							diseaseToll,					// Disease toll
+							"Disease: " + diseaseName		// Hover tooltip
+						]);
+					}
+				}
+				
+			}
+			
+			return data; 
+		};
+		
+		CityGeochart.prototype.getOptions = function() {
 			// If region was not specified default to the world view
 			if(typeof this.region != 'string')
 				this.region = 'world';
-			
-			options.region = this.region;
-			options.legend = 'none';
-			return options;
+
+			return {
+				displayMode: "markers",
+				region: this.region,
+				colorAxis: {colors: ['green', 'blue']}
+			};
 		};
 		
 		google.load("visualization", "1", {packages:["geochart"]});
@@ -276,6 +327,9 @@
 		function drawRegionsMap(region) {
 			var regionChart = new RegionGeochart();
 			regionChart.draw();
+			
+			var cityChart = new CityGeochart();
+			//cityChart.draw();
       }
     </script>
   </head>
