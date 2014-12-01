@@ -46,28 +46,73 @@
 		// Contains all country data
 		// Eventually, within each country we can contain city data as well.
 		// So when we zoom in we can display markers for each city
-		var countryData = [
-			{
-				name: "Haiti",
-				disease: "Cholera"
+		var countryData = {
+			"Haiti": {
+				diseases: {
+					"Cholera": 100,
+				},
+				population: null,
+				cities: null,
 			},
-			{
-				name: "Madagascar",
-				disease: "Bubonic Plague"
+			"Madagascar": {
+				diseases: {
+					"Bubonic Plague": 100,
+					"Second": 100,
+				},
+				population: null,
+				cities: null,
 			},
-			{
-				name: "Sierra Lione",
-				disease: "Ebola"
+			"Sierra Lione": {
+				diseases: {
+					"Ebola": 100,
+				},
+				population: null,
+				cities: [
+					{
+						name: "Freetown",
+						disease: "Ebola",
+						population: 1170200,
+						dead: 300,
+					},
+					{
+						name: "Bo",
+						disease: "Ebola",
+						population: 243266,
+						dead: 10,
+					},
+					{
+						name: "Kenema",
+						disease: "Ebola",
+						population: 188463,
+						dead: 33,
+					},
+					{
+						name: "Makeni",
+						disease: "Ebola",
+						population: 112489,
+						dead: 50,
+					},
+					{
+						name: "Koidu Town",
+						disease: "Ebola",
+						population: 111800,
+						dead: 3,
+					},
+				]
 			},
-			{
-				name: "Guinea",
-				disease: "Ebola"
+			"Guinea": {
+				diseases: {
+					"Ebola": 100,
+				},
+				population: null,
 			},
-			{
-				name: "Liberia",
-				disease: "Ebola"
+			"Liberia": {
+				diseases: {
+					"Ebola": 100,
+				},
+				population: null,
 			},
-		];
+		};
 		
 		var chart = null;
 		google.load("visualization", "1", {packages:["geochart"]});
@@ -130,34 +175,48 @@
 			// use a different color for each disease
 			var colorCounter = 0;
 			var diseaseColorMap = {};
-			countryData.forEach(function (country) {
-				// If we haven't seen this disease save it's color
-				// and increment our counter
-				if(!diseaseColorMap[country.disease])
-				{
-					// If we've used up all of our colors
-					// throw an exception.
-					if(colorCounter + 1 >= colorIndexes.length)
-						throw "We need more colors!"
+			for(var countryName in countryData)
+			{
+				var country = countryData[countryName];
 				
-					diseaseColorMap[country.disease] = colorIndexes[colorCounter++];
-
-					// Update our legend with the new color
-					var diseaseLegendEntry = document.createElement("li");
-					diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + colors[diseaseColorMap[country.disease]] + "'></div>" +
-						"<label>" + country.disease + "</label>" +
-						"<div style='clear: both;'></div>";
+				// Loop through each countries diseases and add an entry for them
+				//
+				// NOTE: Currently the last entry winds. We need to color code (or identify in some way)
+				// countries that have multiple diseases.
+				for(var diseaseName in country.diseases)
+				{
+					var disease = country.diseases[diseaseName];
+				
+					// If we haven't seen this disease save it's color
+					// and increment our counter
+					if(!diseaseColorMap[diseaseName])
+					{
+						// If we've used up all of our colors
+						// throw an exception.
+						if(colorCounter >= colorIndexes.length)
+							throw "We need more colors!"
 					
-					legend.appendChild(diseaseLegendEntry);
+						var diseaseColorIndex = colorIndexes[colorCounter++];
+						diseaseColorMap[diseaseName] = diseaseColorIndex;
+						
+						// Update our legend with the new color
+						var diseaseLegendEntry = document.createElement("li");
+						diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + colors[diseaseColorIndex] + "'></div>" +
+							"<label>" + diseaseName + "</label>" +
+							"<div style='clear: both;'></div>";
+						
+						legend.appendChild(diseaseLegendEntry);
+					}
+					
+					// Add a row for the country
+					data.addRow([
+						countryName,					// Country
+						diseaseColorIndex,				// Disease color
+						"Disease: " + diseaseName		// Hover tooltip
+					]);
 				}
 				
-				// Add a row for the country
-				data.addRow([
-					country.name,						// Country
-					diseaseColorMap[country.disease],	// Disease color
-					"Disease " + country.disease		// Hover tooltip
-				]);
-			});
+			}
 			
 			return data;
 		}
