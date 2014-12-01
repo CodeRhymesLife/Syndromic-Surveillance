@@ -2,6 +2,21 @@
   <head>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	<style>
+		.zoom {
+			list-style: none;
+		}
+		
+		.zoom li {
+			display: inline;
+			border: 1px solid black;
+			padding: 3px;
+			font-size: 14px;
+		}
+		
+		.zoom li:hover {
+			cursor: pointer;
+		}
+	
 		#legend {
 			list-style: none;
 		}
@@ -57,19 +72,41 @@
 		var chart = null;
 		google.load("visualization", "1", {packages:["geochart"]});
 		google.setOnLoadCallback(drawRegionsMap);
+		
+		// Hook up zoom events
+		window.addEventListener("load", function() {
+			zoomIn.addEventListener("click", zoomInToLastSelectedRegion);
+			zoomOut.addEventListener("click", zoomOutToWorld);
+		});
 
 		/*
 			Fired when a highlighted visualization (e.g. country) is selected
 		*/
 		function onSelect(e) {
 			var selection = chart.getSelection()[0];
+			zoomInToLastSelectedRegion();
 		}
 		
 		/*
 			Fired when a region is selected
 		*/
+		var lastSelectedRegion = null;
 		function onRegionClick(e) {
-			var region = e.region;
+			lastSelectedRegion = e.region;
+		}
+		
+		/*
+			Zoom in to the last selected region
+		*/
+		function zoomInToLastSelectedRegion() {
+			drawRegionsMap(lastSelectedRegion);
+		}
+		
+		/*
+			Zoom out to the full map view
+		*/
+		function zoomOutToWorld() {
+			drawRegionsMap();
 		}
 		
 		/*
@@ -78,6 +115,9 @@
 			For example, we can filter based on disease or country
 		*/
 		function buildCountryDataTable() {
+			// Clear the legend
+			legend.innerHTML = "";
+		
 			// Create the data object and add columns.
 			// We don't want to display the disease column that's used for coloring,
 			// so instead we add a tooltip column
@@ -90,7 +130,6 @@
 			// use a different color for each disease
 			var colorCounter = 0;
 			var diseaseColorMap = {};
-			var legend = document.getElementById("legend");
 			countryData.forEach(function (country) {
 				// If we haven't seen this disease save it's color
 				// and increment our counter
@@ -126,10 +165,15 @@
 		/*
 			Draw the chart
 		*/
-		function drawRegionsMap() {
+		function drawRegionsMap(region) {
+			// If region was not specified default to the world view
+			if(typeof region != 'string')
+				region = 'world';
+		
 			var data = buildCountryDataTable();
-
+			
 			var options = {
+				region: region,
 				legend: 'none',
 				colorAxis: { colors: colors, values: colorIndexes }
 			};
@@ -146,6 +190,10 @@
   </head>
   <body>
     <div id="regions_div" style="width: 900px; height: 500px;"></div>
+	<ul class="zoom">
+		<li id="zoomIn">+</li>
+		<li id="zoomOut">-</li>
+	</ul>
 	<ul id="legend">
 		<!-- Items added dynamically -->
 	</ul>
