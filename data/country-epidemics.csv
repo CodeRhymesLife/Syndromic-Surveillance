@@ -1,4 +1,11 @@
-CountryName,EpidemicNameDate,CountryColor,EpidemicLatitude,EpidemicLongitude,CountryCode,ContinentName,
-Haiti,Cholera (2010),#990000,19.0,72.25,HT,North America
-Liberia,Ebola (2014),#dd0000,6.3167,10.8,LR,Africa
-Sierra Leone,Ebola(2014),#dd0000,8.4844,13.2344,SL,Africa
+CountryName,DiseaseName,EpidemicStartYear,CaseCount,Population,CountryColor,Description\n
+Haiti,Cholera,2010,45000,10.32e6,#ee3333,On October 19 2010 ten months after the catastrophic January 2010 earthquake in Haiti that killed over 200000 people and displaced over 1 million the Haitian Ministry of Public Health and Population (MSPP) was notified of a sudden increase in patients presenting with watery diarrhea and dehydration in the Artibonite and Centre Departments...\n
+Dominican Republic,Cholera,2010,156,10.4e6,#ee6666,North America\n
+Cuba,Cholera,2012,1,11.27e6,#ee8888,North America\n
+Liberia,Ebola,2014,7168,4.294e6,#ee0000,Africa\n
+Sierra Leone,Ebola,2014,6599,6.092e6,#ee0000,Africa\n
+Guinea,Ebola,2014,2134,11.75e6,#ee1111,Africa\n
+Mali,Ebola,2014,8,15.3e6,#ee0000,Africa\n
+Madagascar,Bubonic Plague,2014,138,22.92e6,#ee2222,Africa\n
+Saudi Arabia,MERS,2014,113,28.83e6,#ee5555,Asia\n
+Yemen,MERS,2014,5,24.41e6,#ee5555,Asia

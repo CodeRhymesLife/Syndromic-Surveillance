@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>D3 World Map Template | TechSlides</title>
+<title>Epidemic World Map</title>
 <style>
-.country{
+/*.country{
   stroke: #aaa;
   stroke-width: 0.5px;
-}
+}*/
 .country:hover{
   stroke: #eee;
   stroke-width: 1.5px;
@@ -39,14 +39,15 @@ div.tooltip {
   fill: none;
   stroke: #bbb;
   stroke-width: .5px;
-  stroke-opacity: .4;
+  stroke-opacity: .3;
 }
 .equator {
-  stroke: #ccc;
+  stroke: #ddd;
   stroke-width: 1px;
 }
 
 </style>
+<head>
 </head>
 <body>
 
@@ -54,8 +55,9 @@ div.tooltip {
   <p>Where are the world's current disease epidemics? Mouse over affected countries to find out more and learn how to contribute.</p>
 
   <div id="container"></div>
-  </p>
-  <div id="output"></div>
+  <center>
+    <div id="zoombar"></div>
+  </center>
 
 <script src="js/d3.min.js"></script>
 <script src="js/topojson.v1.min.js"></script>
@@ -63,8 +65,17 @@ div.tooltip {
 d3.select(window).on("resize", throttle);
 
 var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 9])
+    .scaleExtent([1, 10])
     .on("zoom", move);
+
+var slider = d3.select("#zoombar").append("div").append("input")
+  .datum({})
+  .attr("type", "range")
+  .attr("value", zoom.scaleExtent()[0])
+  .attr("min", zoom.scaleExtent()[0])
+  .attr("max", zoom.scaleExtent()[1])
+  .attr("step", (zoom.scaleExtent()[1] - zoom.scaleExtent()[0]) / 100)
+  .on("input", slided);
 
 var width = document.getElementById('container').offsetWidth;
 var height = width / 2;
@@ -120,14 +131,23 @@ function draw(topo) {
   var country = g.selectAll(".country").data(topo);
 
   // test data
-  var csvdata = "CountryName,EpidemicNameDate,CountryColor,EpidemicLatitude,EpidemicLongitude,CountryCode,ContinentName\nHaiti,Cholera (2010),#990000,19.0,72.25,HT,North America\nLiberia,Ebola (2014),#dd0000,6.3167,10.8,LR,Africa\nSierra Leone,Ebola(2014),#dd0000,8.4844,13.2344,SL,Africa\nGuinea,Ebola(2014),#dd0000,8.4844,13.2344,GQ,Africa";
+  var csvdata = "CountryName,DiseaseName,EpidemicStartYear,CaseCount,Population,CountryColor,Description,Hyperlink\nHaiti,Cholera,2010,45000,10.32e6,#ee3333,On October 19 2010 ten months after the catastrophic January 2010 earthquake in Haiti that killed over 200000 people and displaced over 1 million the Haitian Ministry of Public Health and Population (MSPP) was notified of a sudden increase in patients presenting with watery diarrhea and dehydration in the Artibonite and Centre Departments...,http://www.cdc.gov/haiticholera/\nDominican Republic,Cholera,2010,156,10.4e6,#ee6666,North America\nCuba,Cholera,2012,1,11.27e6,#ee8888,North America\nLiberia,Ebola,2014,7168,4.294e6,#ee0000,Africa\nSierra Leone,Ebola,2014,6599,6.092e6,#ee0000,Africa\nGuinea,Ebola,2014,2134,11.75e6,#ee1111,Africa\nMali,Ebola,2014,8,15.3e6,#ee0000,Africa\nMadagascar,Bubonic Plague,2014,138,22.92e6,#ee2222,Africa\nSaudi Arabia,MERS,2014,113,28.83e6,#ee5555,Asia\nYemen,MERS,2014,5,24.41e6,#ee5555,Asia";
 
   // create array from csvdata
   var csvarray = d3.csv.parse(csvdata, function(d) {
+    var mortrate = Number(d.CaseCount)/Number(d.Population);
+    var hexstring = "";
+    if (mortrate >= 0 & mortrate < 0.00005) hexstring="#eeaaaa";
+    else if (mortrate >= 0.00005 & mortrate < 0.0001) hexstring="#ee8888";
+    else if (mortrate >= 0.0001 & mortrate < 0.0005) hexstring="#ee6666";
+    else if (mortrate >= 0.0005 & mortrate < 0.001) hexstring="#ee4444";
+    else if (mortrate >= 0.001 & mortrate < 0.005) hexstring="#ee2222";
+    else hexstring="#ee0000";
+    var popupstring="<div align=\"left\"><p><b>" + d.CountryName + "</b></p><p>" + "Disease: " + d.DiseaseName + "</p><p>" + "Year began: " + d.EpidemicStartYear + "</p><p>" + "Description: " + d.Description + "</p><p><a href=\"" + d.Hyperlink + "\">More information</a></p></div>";
     return {
       name: d.CountryName,
-      color: d.CountryColor,
-      popup: d.EpidemicNameDate
+      color: hexstring,
+      popup: popupstring
     };
   });
 
@@ -147,12 +167,12 @@ function draw(topo) {
           return "#cccccc";});
 
   //offsets for tooltips
-  var offsetL = document.getElementById('container').offsetLeft+20;
-  var offsetT = document.getElementById('container').offsetTop+10;
+  var offsetL = document.getElementById('container').offsetLeft+5;
+  var offsetT = document.getElementById('container').offsetTop+5;
 
   //tooltips
   country
-    .on("mousemove", function(d,i) {
+    .on("mouseover", function(d,i) {
 
       var mouse = d3.mouse(svg.node()).map( function(d) { return parseInt(d); } );
 
@@ -160,16 +180,16 @@ function draw(topo) {
 
       // change popup message if country is in epidemic csv file
       if (epicountries.indexOf(d.properties.name) != -1) {
-         popupmsg = d.properties.name + ": " + csvarray[epicountries.indexOf(d.properties.name)].popup; }
+         popupmsg = csvarray[epicountries.indexOf(d.properties.name)].popup; }
 
       tooltip.classed("hidden", false)
-             .attr("style", "left:"+(mouse[0]+offsetL)+"px;top:"+(mouse[1]+offsetT)+"px")
+             .attr("style", "left:"+(mouse[0]+offsetL)+"px;top:"+(mouse[1]+offsetT)+"px;")
              .html(popupmsg);
 
-      })
-      .on("mouseout",  function(d,i) {
-        tooltip.classed("hidden", true);
-      }); 
+      });
+      // .on("mouseout",  function(d,i) {
+      //   tooltip.classed("hidden", true);
+      // }); 
 
 }
 
@@ -207,9 +227,24 @@ function move() {
   //adjust the country hover stroke width based on zoom level
   d3.selectAll(".country").style("stroke-width", 1.5 / s);
 
+  slider.property("value",s);
+
 }
 
+function slided(d) {
+  var s = d3.select(this).property("value");
 
+  g.attr("transform",
+      "translate(" + width/2 + ", " + height/2 + ") " +
+      "scale(" + s + ") " +
+      "translate(" + (-width/2) + ", " + (-height/2) + ")");
+
+  d3.selectAll(".country").style("stroke-width", 1.5 / s);
+  
+  zoom.translate(t);
+  zoom.scale(s).event(svg);
+
+  }
 
 var throttleTimer;
 function throttle() {
@@ -224,8 +259,8 @@ function throttle() {
 function click() {
   var latlon = projection.invert(d3.mouse(this));
   console.log(latlon);
+  tooltip.classed("hidden", true);
 }
-
 
 //function to add points and text to the map (used in plotting capitals)
 function addpoint(lat,lon,text) {
