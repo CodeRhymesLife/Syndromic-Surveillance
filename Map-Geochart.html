@@ -1,7 +1,33 @@
 <html>
   <head>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<style>
+		#legend {
+			list-style: none;
+		}
+		
+		#legend li label, #legend li .diseaseColor {
+			float: left;
+		}
+		
+		#legend .diseaseColor{
+			width: 10px;
+			height: 10px;
+		}
+	</style>
     <script type="text/javascript">
+		// A set of colors we can use in our chart
+		var colors = [ "red", "green", "blue", "yellow", "purple", "orange" ];
+		
+		// We need to associate an id with each color to give to the
+		// chart so it knows which values to associate with what colors.
+		// We also use this to build our legend
+		var colorCounter = 0;
+		var colorIndexes = [];
+		colors.forEach(function (c) {
+			colorIndexes.push(colorCounter++);
+		});
+	
 		// Contains all country data
 		// Eventually, within each country we can contain city data as well.
 		// So when we zoom in we can display markers for each city
@@ -57,23 +83,39 @@
 			// so instead we add a tooltip column
 			var data = new google.visualization.DataTable();
 			data.addColumn('string', 'Country');
-			data.addColumn('number', 'Disease');
+			data.addColumn("number", "DiseaseColor");
 			data.addColumn({type:'string', role:'tooltip'});
 			
 			// Add each country to the dataset and
-			// create a disease code for each disease
-			var diseaseCodeCounter = 0;
-			var diseaseCodeMap = {};
+			// use a different color for each disease
+			var colorCounter = 0;
+			var diseaseColorMap = {};
+			var legend = document.getElementById("legend");
 			countryData.forEach(function (country) {
 				// If we haven't seen this disease save it's color
-				// amd increment our counter
-				if(!diseaseCodeMap[country.disease])
-					diseaseCodeMap[country.disease] = diseaseCodeCounter++
+				// and increment our counter
+				if(!diseaseColorMap[country.disease])
+				{
+					// If we've used up all of our colors
+					// throw an exception.
+					if(colorCounter + 1 >= colorIndexes.length)
+						throw "We need more colors!"
+				
+					diseaseColorMap[country.disease] = colorIndexes[colorCounter++];
+
+					// Update our legend with the new color
+					var diseaseLegendEntry = document.createElement("li");
+					diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + colors[diseaseColorMap[country.disease]] + "'></div>" +
+						"<label>" + country.disease + "</label>" +
+						"<div style='clear: both;'></div>";
+					
+					legend.appendChild(diseaseLegendEntry);
+				}
 				
 				// Add a row for the country
 				data.addRow([
 					country.name,						// Country
-					diseaseCodeMap[country.disease],	// Disease code
+					diseaseColorMap[country.disease],	// Disease color
 					"Disease " + country.disease		// Hover tooltip
 				]);
 			});
@@ -88,7 +130,8 @@
 			var data = buildCountryDataTable();
 
 			var options = {
-				colorAxis: {colors: ['#e7711c', '#4374e0']}
+				legend: 'none',
+				colorAxis: { colors: colors, values: colorIndexes }
 			};
 
 			chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
@@ -103,5 +146,8 @@
   </head>
   <body>
     <div id="regions_div" style="width: 900px; height: 500px;"></div>
+	<ul id="legend">
+		<!-- Items added dynamically -->
+	</ul>
   </body>
 </html>
