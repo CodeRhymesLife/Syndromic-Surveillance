@@ -3,6 +3,45 @@
 <script type="text/javascript">
 	google.load("visualization", "1", {packages:["geochart"]});
 	google.setOnLoadCallback(drawRegionsMap);
+	
+	// Hook up zoom events
+	window.addEventListener("load", function() {
+		zoomIn.addEventListener("click", zoomInToLastSelectedRegion);
+		zoomOut.addEventListener("click", zoomOutToWorld);
+	});
+	
+	/*
+		Fired when a region is selected
+	*/
+	function onRegionClick(region) {
+		cityChart.region = region
+	}
+
+	/*
+		Zoom in to the last selected region
+	*/
+	function zoomInToLastSelectedRegion() {
+		cityChart.draw();
+		legend.style.display = "none";
+	}
+
+	/*
+		Zoom out to the full map view
+	*/
+	function zoomOutToWorld() {
+		drawRegionsMap();
+	}
+
+	/*
+		Draw the chart
+	*/
+	function drawRegionsMap(region) {
+		Meteor.subscribe("countries", function() {
+			Meteor.subscribe("cities", function() {
+				regionChart.draw(zoomInToLastSelectedRegion, onRegionClick);
+			});
+		});
+	}
 </script>
 </head>
 <body>
