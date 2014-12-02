@@ -73,7 +73,7 @@ RegionGeochart.prototype.getData = function() {
 	countryData.forEach(function (country) {
 		// If we haven't seen this disease save it's color
 		// and increment our counter
-		if(!diseaseColorMap[country.Disease])
+		if(typeof diseaseColorMap[country.Disease] != "number")
 		{
 			// If we've used up all of our colors
 			// throw an exception.
@@ -95,7 +95,7 @@ RegionGeochart.prototype.getData = function() {
 		// Add a row for the country
 		data.addRow([
 			country.Country,				// Country name
-			diseaseColorIndex,				// Disease color
+			diseaseColorMap[country.Disease],				// Disease color
 			"Disease: " + country.Disease	// Hover tooltip
 		]);
 	}, this);
