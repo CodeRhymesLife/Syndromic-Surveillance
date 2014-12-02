@@ -124,42 +124,34 @@ CityGeochart.prototype.getData = function() {
 	// so instead we add a tooltip column
 	var data = new google.visualization.DataTable();
 	data.addColumn('string', 'City');
-	data.addColumn("number", "Population");
-	data.addColumn("number", "Area");
+	data.addColumn("number", "Cases");
 	data.addColumn({type:'string', role:'tooltip'});
+	
+	var cityData = [];
+	var cityNameData = Cities.find({}, { sort: {Location: 1}, fields: {Location: true} }).fetch()
+	var uniqueCityNames = _.uniq(cityNameData.map(function(x) {
+			return x.Location;
+		}), true);
+	
+	// Add the oldest entry to the city data collection
+	uniqueCityNames.forEach(function (cityName) {
+		cityData.push(
+			// Get the oldest city
+			Cities.find({ Location: cityName }, { sort: { Date: 1 }, limit: 1 }).fetch()[0]
+			);
+	});
 	
 	// Loop over each country and add it's cities' disease counts
 	var colorCounter = 0;
 	var diseaseColorMap = {};
-	for(var countryName in countryData)
-	{
-		var country = countryData[countryName];
-		
-		// If we don't have any cities go to the next country
-		if(!country.cities)
-			continue;
-		
-		// Loop through each country's cities and add an entry for them
-		for(var cityName in country.cities)
-		{
-			var city = country.cities[cityName];
-			
-			// Loop over each disease in this city and add an entry for each count
-			for(var diseaseName in city.diseases)
-			{
-				var diseaseToll = country.diseases[diseaseName];
-				
-				// Add a row for the country
-				data.addRow([
-					cityName,						// Country
-					city.population,				// Population
-					diseaseToll,					// Disease toll
-					"Disease: " + diseaseName		// Hover tooltip
-				]);
-			}
-		}
-		
-	}
+	cityData.forEach(function (city) {
+		// Add a row for the country
+		data.addRow([
+			city.Location,					// Country
+			+city.Cases,					// Cases
+			"Disease: " + city.Disease		// Hover tooltip
+		]);
+	}, this);
 	
 	return data; 
 };
