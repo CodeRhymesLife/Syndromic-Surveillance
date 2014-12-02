@@ -1,5 +1,8 @@
 .zoom {
 	list-style: none;
+	font-family: sans-serif;
+	font-size: 12px;
+	padding: 10px;
 }
 
 .zoom li {
@@ -24,4 +27,28 @@
 #legend .diseaseColor{
 	width: 10px;
 	height: 10px;
+}
+
+.google-visualization-tooltip{
+	width: 200px !important;
+	border: 2px solid red !important;
+	font-family: sans-serif !important;
+} 
+
+section {
+	width: 100%;
+	margin: auto;
+	padding: 10px;
+}
+
+
+div#chart_div{
+	width: 80%;
+	float: left;
+}
+
+div#info_div{
+	margin-left: 5%;
+	width: 15%;
+	float: right;
 }
