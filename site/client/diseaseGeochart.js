@@ -51,13 +51,14 @@ RegionGeochart.prototype.getData = function() {
 	data.addColumn("number", "DiseaseColor");
 	data.addColumn({type:'string', role:'tooltip'});
 	
-	var countryData = [];
+	// Get an array of unique country names
 	var countryNameData = Countries.find({}, { sort: {Country: 1}, fields: {Country: true} }).fetch()
 	var uniqueCountryNames = _.uniq(countryNameData.map(function(x) {
 			return x.Country;
 		}), true);
 	
-	// Add the oldest entry to the country data collection
+	// Loop over the array of unique country names and look for the latest entry in the country collection
+	var countryData = [];
 	uniqueCountryNames.forEach(function (countryName) {
 		countryData.push(
 			// Get the oldest country
@@ -115,7 +116,7 @@ RegionGeochart.prototype.getOptions = function() {
 CityGeochart.prototype = new DiseaseGeochart();
 CityGeochart.prototype.constructor = CityGeochart;
 function CityGeochart() {
-	this.region = "GN";
+	this.region = null;
 }
 
 CityGeochart.prototype.getData = function() {
@@ -127,13 +128,14 @@ CityGeochart.prototype.getData = function() {
 	data.addColumn("number", "Cases");
 	data.addColumn({type:'string', role:'tooltip'});
 	
-	var cityData = [];
+	// Get an array of unique city names
 	var cityNameData = Cities.find({}, { sort: {Location: 1}, fields: {Location: true} }).fetch()
 	var uniqueCityNames = _.uniq(cityNameData.map(function(x) {
 			return x.Location;
 		}), true);
 	
-	// Add the oldest entry to the city data collection
+	// Loop over the array of unique city names and look for the latest entry in the city collection
+	var cityData = [];
 	uniqueCityNames.forEach(function (cityName) {
 		cityData.push(
 			// Get the oldest city
@@ -141,9 +143,7 @@ CityGeochart.prototype.getData = function() {
 			);
 	});
 	
-	// Loop over each country and add it's cities' disease counts
-	var colorCounter = 0;
-	var diseaseColorMap = {};
+	// Loop over each city and add it's case count to the data set
 	cityData.forEach(function (city) {
 		// Add a row for the country
 		data.addRow([
