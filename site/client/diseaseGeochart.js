@@ -51,50 +51,53 @@ RegionGeochart.prototype.getData = function() {
 	data.addColumn("number", "DiseaseColor");
 	data.addColumn({type:'string', role:'tooltip'});
 	
+	var countryData = [];
+	var countryNameData = Countries.find({}, { sort: {Country: 1}, fields: {Country: true} }).fetch()
+	var uniqueCountryNames = _.uniq(countryNameData.map(function(x) {
+			return x.Country;
+		}), true);
+	
+	// Add the oldest entry to the country data collection
+	uniqueCountryNames.forEach(function (countryName) {
+		countryData.push(
+			// Get the oldest country
+			Countries.find({ Country: countryName }, { sort: { Date: 1 }, limit: 1 }).fetch()[0]
+			);
+	});
+
 	// Add each country to the dataset and
 	// use a different color for each disease
 	var colorCounter = 0;
 	var diseaseColorMap = {};
-	for(var countryName in countryData)
-	{
-		var country = countryData[countryName];
-		
-		// Loop through each country's diseases and add an entry for them
-		//
-		// NOTE: Currently the last entry winds. We need to color code (or identify in some way)
-		// countries that have multiple diseases.
-		for(var diseaseName in country.diseases)
+	countryData.forEach(function (country) {
+		// If we haven't seen this disease save it's color
+		// and increment our counter
+		if(!diseaseColorMap[country.Disease])
 		{
-			// If we haven't seen this disease save it's color
-			// and increment our counter
-			if(!diseaseColorMap[diseaseName])
-			{
-				// If we've used up all of our colors
-				// throw an exception.
-				if(colorCounter >= this.colorIndexes.length)
-					throw "We need more colors!"
+			// If we've used up all of our colors
+			// throw an exception.
+			if(colorCounter >= this.colorIndexes.length)
+				throw "We need more colors!"
+		
+			var diseaseColorIndex = this.colorIndexes[colorCounter++];
+			diseaseColorMap[country.Disease] = diseaseColorIndex;
 			
-				var diseaseColorIndex = this.colorIndexes[colorCounter++];
-				diseaseColorMap[diseaseName] = diseaseColorIndex;
-				
-				// Update our legend with the new color
-				var diseaseLegendEntry = document.createElement("li");
-				diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + this.colors[diseaseColorIndex] + "'></div>" +
-					"<label>" + diseaseName + "</label>" +
-					"<div style='clear: both;'></div>";
-				
-				legend.appendChild(diseaseLegendEntry);
-			}
+			// Update our legend with the new color
+			var diseaseLegendEntry = document.createElement("li");
+			diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + this.colors[diseaseColorIndex] + "'></div>" +
+				"<label>" + country.Disease + "</label>" +
+				"<div style='clear: both;'></div>";
 			
-			// Add a row for the country
-			data.addRow([
-				countryName,					// Country
-				diseaseColorIndex,				// Disease color
-				"Disease: " + diseaseName		// Hover tooltip
-			]);
+			legend.appendChild(diseaseLegendEntry);
 		}
 		
-	}
+		// Add a row for the country
+		data.addRow([
+			country.Country,				// Country name
+			diseaseColorIndex,				// Disease color
+			"Disease: " + country.Disease	// Hover tooltip
+		]);
+	}, this);
 	
 	return data; 
 };
