@@ -147,9 +147,9 @@ CityGeochart.prototype.getData = function() {
 	cityData.forEach(function (city) {
 		// Add a row for the country
 		data.addRow([
-			city.Location,					// Country
-			+city.Cases,					// Cases
-			"Disease: " + city.Disease		// Hover tooltip
+			city.Location + ", " + city.Country,	// Country
+			+city.Cases,							// Cases
+			"Disease: " + city.Disease				// Hover tooltip
 		]);
 	}, this);
 	
