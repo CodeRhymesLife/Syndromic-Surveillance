@@ -21,7 +21,7 @@
 			list-style: none;
 			font-family: sans-serif;
 			font-size: 12px;
-			padding: 10px;
+			padding: 1px;
 		}
 		
 		#legend li label, #legend li .diseaseColor {
@@ -40,9 +40,9 @@
 		} 
 
 		section {
-			width: 100%;
+			width: 90%;
 			margin: auto;
-			padding: 10px;
+			padding: 20px;
 		}
 
 
@@ -52,11 +52,14 @@
 		}
 
 		div#info_div{
-			margin-left: 5%;
-			width: 15%;
+			margin-left: 2%;
+			width: 18%;
 			float: right;
+			font-family: sans-serif;
 		}
-		
+
+		div#description{
+			font-family: sans-serif;
 		}
 	</style>
     <script type="text/javascript">
@@ -70,6 +73,22 @@
 				},
 				population: null,
 				description: "On October 19, 2010, ten months after the catastrophic January 2010 earthquake in Haiti that killed over 200,000 people and displaced over 1 million, the Haitian Ministry of Public Health and Population (MSPP) was notified of a sudden increase in patients presenting with watery diarrhea and dehydration in the Artibonite and Centre Departments...",
+				cities: null,
+			},
+			"Dominican Republic": {
+				diseases: {
+					"Cholera": 15,
+				},
+				population: null,
+				description: "lorem ipsum",
+				cities: null,
+			},
+			"Cuba": {
+				diseases: {
+					"Cholera": 15,
+				},
+				population: null,
+				description: "lorem ipsum",
 				cities: null,
 			},
 			"Madagascar": {
@@ -165,7 +184,7 @@
 
 		function DiseaseGeochart() {
 			// A set of colors we can use in our chart
-			this.colors = [ "red", "green", "blue", "yellow", "purple", "orange" ];
+			this.colors = [ "salmon", "orange", "red", "pink", "hotpink", "orangered" ];
 			
 			// We need to associate an id with each color to give to the
 			// chart so it knows which values to associate with what colors.
@@ -246,7 +265,7 @@
 						// Update our legend with the new color
 						var diseaseLegendEntry = document.createElement("li");
 						diseaseLegendEntry.innerHTML = "<div class='diseaseColor' style='background-color: " + this.colors[diseaseColorIndex] + "'></div>" +
-							"<label>" + diseaseName + "</label>" +
+							"<label>&nbsp;" + diseaseName + "</label>" +
 							"<div style='clear: both;'></div>";
 						
 						legend.appendChild(diseaseLegendEntry);
@@ -261,8 +280,6 @@
 						"<br><a href=\"" + diseaseName + "\">More Information</a>" // Link to info
 						
 					]);
-
-					document.getElementById("description").innerHTML = "Lorem Ipsum";
 
 				}
 				
@@ -345,7 +362,7 @@
 			return {
 				displayMode: "markers",
 				region: this.region,
-				colorAxis: {colors: ['green', 'blue']},
+				colorAxis: {colors: ['yellow', 'red']},
 				tooltip: {
 					isHtml: true
 				}
@@ -368,7 +385,8 @@
 			Fired when a region is selected
 		*/
 		function onRegionClick(region) {
-			cityChart.region = region
+			cityChart.region = region;
+			//document.getElementById("description").innerHTML = "region specific information";
 		}
 		
 		/*
@@ -398,7 +416,10 @@
   	<section>
     	<div id="chart_div"></div>
     	<div id="info_div">
-			<ul class="zoom">
+    		<h1><font face="Helvetica">Epidemic Monitor</h1>
+    		<p><font size="3px">Do you know where disease epidemics are happening around the world? Use this tool to keep up to date.</p>
+    		<br>
+    		<ul class="zoom">
 				<li id="zoomIn">+</li>
 				<li id="zoomOut">-</li>
 			</ul>
