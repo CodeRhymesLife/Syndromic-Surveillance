@@ -6,7 +6,13 @@ function dataParser() {
 	// all access should be done through getAllLevels() which implements caching
 	var levels = null;
 
-    var rootDir = process.cwd() + '/server/data/';
+	// Because some dev envs have different versions of meteor
+	// we need to use different methods to get the root dir
+	var rootDataDir = null;
+	if(process.env.PWD)
+		rootDataDir = process.env.PWD + "/data/";
+	else
+		rootDataDir = process.cwd() + '/server/data/';
 
 	// private function to parse all files from the specified directory and build an array of objects
 	var getObjectsFromFilesInDir = function (dir) {
@@ -53,7 +59,7 @@ function dataParser() {
 		Countries.remove({});
 		Cities.remove({});
 		
-		var allFileData = getObjectsFromFilesInDir(rootDir);
+		var allFileData = getObjectsFromFilesInDir(rootDataDir);
 		
 		for (var i = 0; i < allFileData.length; i++) {
 			var data = allFileData[i];
